@@ -434,15 +434,16 @@ def allowed_file(filename):
 def safe_path(subdir=""):
     user_folder = session.get('username')
     if not user_folder:
-        return UPLOAD_FOLDER  # fallback
+        print("[ERROR] No user session found")
+        return UPLOAD_FOLDER  # fallback path must still exist
 
     user_upload_folder = os.path.join(UPLOAD_FOLDER, secure_filename(user_folder))
-
-    # Prevent path traversal attacks, brings it straight to the user folder
     full = os.path.abspath(os.path.join(user_upload_folder, subdir))
+
     if not full.startswith(user_upload_folder):
         return user_upload_folder
     return full
+
 
 def login_required(func):
     # Decorator to protect routes
