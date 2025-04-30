@@ -32,6 +32,16 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1000 * 1000  # 1 MB
 app.secret_key = 'supersecretkey'  # Needed for sessions
 
+@app.before_request
+def log_request_info():
+    ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    port = request.environ.get('REMOTE_PORT', 'unknown')
+    method = request.method
+    path = request.path
+
+    print(f"[HTTP REQUEST] {method} {path} from {ip}:{port}")
+
+
 # Load users from file or create empty dict
 def load_users():
     if os.path.exists(USERS_FILE):
