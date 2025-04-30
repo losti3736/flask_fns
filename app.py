@@ -592,8 +592,8 @@ def setup_user_folders():
         os.makedirs(UPLOAD_FOLDER)
 
 # Driver
-# if __name__ == "__main__":
-#     print(f"📂 File system root: {UPLOAD_FOLDER}")
-#     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-#     app.run(debug=True)
+if __name__ == "__main__":
+    print(f"📂 File system root: {UPLOAD_FOLDER}")
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    app.run(debug=True)
  
