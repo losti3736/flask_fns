@@ -7,12 +7,25 @@ from werkzeug.utils import secure_filename
 from flask import session
 
 
+import cloudinary
+import cloudinary.uploader
+
+cloudinary.config(
+    cloud_name='nfs_store',
+    api_key='331597429749235',
+    api_secret='nMmRWf5jTJsnh-l8KUV4qlTCN9k',
+    secure=True
+)
+
 
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'py'}
 
 # User database file
 USERS_FILE = os.path.join(os.getcwd(), 'users.json')
+# Tracks uploaded Cloudinary files per user
+USER_FILES = os.path.join(os.getcwd(), 'user_files.json')
+
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -29,6 +42,19 @@ def load_users():
 def save_users(users):
     with open(USERS_FILE, 'w') as f:
         json.dump(users, f)
+
+
+
+def load_user_files():
+    if os.path.exists(USER_FILES):
+        with open(USER_FILES, 'r') as f:
+            return json.load(f)
+    return {}
+
+def save_user_files(data):
+    with open(USER_FILES, 'w') as f:
+        json.dump(data, f, indent=2)
+
 
 # HTML Templates
 REGISTER_TEMPLATE = '''
@@ -462,42 +488,50 @@ def logout():
 @app.route('/dir/<path:subdir>')
 @login_required
 def browse(subdir):
-    # Protect using safe_path
     full_path = safe_path(subdir)
     parent_path = os.path.dirname(subdir)
     items = []
-    
+
     for name in os.listdir(full_path):
         path = os.path.join(full_path, name)
         rel = os.path.join(subdir, name).replace("\\", "/")
         items.append({'name': name, 'is_dir': os.path.isdir(path), 'rel_path': rel})
 
-    # Get all folders for the dropdown
-    folders = get_all_folders() 
+    folders = get_all_folders()
 
-    return render_template_string(HTML_TEMPLATE, items=items, rel_path=subdir, parent_path=parent_path, folders=folders)
+    # ✅ Load user's uploaded Cloudinary files
+    username = session.get('username')
+    uploaded_files = load_user_files().get(username, [])
 
-# Upload file to selected folder
+    return render_template_string(
+        HTML_TEMPLATE,
+        items=items,
+        rel_path=subdir,
+        parent_path=parent_path,
+        folders=folders,
+        uploaded_files=uploaded_files
+    )
+
+
+# Upload file to Cloudinary instead of saving locally
 @app.route('/upload_to_selected', methods=['POST'])
 @login_required
 def upload_file_to_selected():
     file = request.files.get('file')
-    target_dir = request.form.get('target_dir', '')
 
-    # Handle invalid file upload
     if not file or file.filename == '':
         return "No file selected", 400
 
-    # Check if the file is allowed
     if file and allowed_file(file.filename):
-        # Save the file to the target directory
-        filename = secure_filename(file.filename)
-        target_path = safe_path(target_dir)
-        os.makedirs(target_path, exist_ok=True)
-        file.save(os.path.join(target_path, filename))
-        return redirect(url_for('browse', subdir=target_dir))
+        try:
+            result = cloudinary.uploader.upload(file)
+            file_url = result['secure_url']
+            return f"✅ File uploaded successfully: <a href='{file_url}' target='_blank'>View file</a>"
+        except Exception as e:
+            return f"Upload error: {str(e)}", 500
 
     return "Invalid file type", 400
+
 
 # Create a new folder 
 @app.route('/create/', defaults={'subdir': ''}, methods=['POST'])
@@ -592,8 +626,21 @@ def setup_user_folders():
         os.makedirs(UPLOAD_FOLDER)
 
 # Driver
+# if __name__ == "__main__":
+#     print(f"📂 File system root: {UPLOAD_FOLDER}")
+#     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+#     app.run(debug=True)
+ 
 if __name__ == "__main__":
+    import socket
+    import os
+
+    port = int(os.environ.get("PORT", 5000))
+    hostname = socket.gethostname()
+    ip = socket.gethostbyname(hostname)
+
+    print(f"🟢 Starting Flask app on {ip}:{port}")
     print(f"📂 File system root: {UPLOAD_FOLDER}")
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-    app.run(debug=True)
- 
+    app.run(host='0.0.0.0', port=port, debug=True)
+
