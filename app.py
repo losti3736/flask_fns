@@ -514,14 +514,22 @@ def browse(subdir):
     parent_path = os.path.dirname(subdir)
     items = []
 
-    for name in os.listdir(full_path):
-        path = os.path.join(full_path, name)
-        rel = os.path.join(subdir, name).replace("\\", "/")
-        items.append({'name': name, 'is_dir': os.path.isdir(path), 'rel_path': rel})
+    # ✅ Check if the path exists
+    if not os.path.exists(full_path):
+        print(f"[ERROR] Requested path does not exist: {full_path}")
+        return f"Directory '{subdir}' does not exist.", 404
+
+    try:
+        for name in os.listdir(full_path):
+            path = os.path.join(full_path, name)
+            rel = os.path.join(subdir, name).replace("\\", "/")
+            items.append({'name': name, 'is_dir': os.path.isdir(path), 'rel_path': rel})
+    except Exception as e:
+        print(f"[ERROR] Failed to list directory '{full_path}': {e}")
+        return f"Error accessing directory: {e}", 500
 
     folders = get_all_folders()
 
-    # Load user's uploaded Cloudinary files
     username = session.get('username')
     uploaded_files = load_user_files().get(username, [])
 
@@ -533,6 +541,7 @@ def browse(subdir):
         folders=folders,
         uploaded_files=uploaded_files
     )
+
 
 
 # Upload file to Cloudinary instead of saving locally
