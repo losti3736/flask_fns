@@ -666,16 +666,16 @@ def setup_user_folders():
 #     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 #     app.run(debug=True)
  
-if __name__ == "__main__":
-    import socket
-    import os
+# if __name__ == "__main__":
+#     import socket
+#     import os
 
-    port = int(os.environ.get("PORT", 5000))
-    hostname = socket.gethostname()
-    ip = socket.gethostbyname(hostname)
+#     port = int(os.environ.get("PORT", 5000))
+#     hostname = socket.gethostname()
+#     ip = socket.gethostbyname(hostname)
 
-    print(f"🟢 Starting Flask app on {ip}:{port}")
-    print(f"📂 File system root: {UPLOAD_FOLDER}")
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-    app.run(host='0.0.0.0', port=port, debug=True)
+#     print(f"🟢 Starting Flask app on {ip}:{port}")
+#     print(f"📂 File system root: {UPLOAD_FOLDER}")
+#     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+#     app.run(host='0.0.0.0', port=port, debug=True)
 
