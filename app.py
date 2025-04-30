@@ -397,6 +397,17 @@ HTML_TEMPLATE = '''
             {% endfor %}
         </ul>
     </div>
+    {% if uploaded_files %}
+    <div class="form-container">
+        <h3>Cloudinary Uploaded Files</h3>
+        <ul>
+            {% for file in uploaded_files %}
+            <li><a href="{{ file.url }}" target="_blank">{{ file.filename }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
 </div>
 <script>
 function confirmDelete(folderName) {
