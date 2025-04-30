@@ -18,13 +18,13 @@ cloudinary.config(
 )
 
 
-UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
+UPLOAD_FOLDER = os.path.join('/tmp', 'uploads')
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'py'}
 
 # User database file
-USERS_FILE = os.path.join(os.getcwd(), 'users.json')
+USERS_FILE = os.path.join('/tmp', 'users.json')
 # Tracks uploaded Cloudinary files per user
-USER_FILES = os.path.join(os.getcwd(), 'user_files.json')
+USER_FILES = os.path.join('/tmp', 'user_files.json')
 
 
 app = Flask(__name__)
