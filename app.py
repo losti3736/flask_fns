@@ -11,7 +11,7 @@ import cloudinary
 import cloudinary.uploader
 
 cloudinary.config(
-    cloud_name='nfs_store',
+    cloud_name='dlpfxvtbq',
     api_key='331597429749235',
     api_secret='nMmRWf5jTJsnh-l8KUV4qlTCN9k',
     secure=True
@@ -510,7 +510,7 @@ def browse(subdir):
 
     folders = get_all_folders()
 
-    # ✅ Load user's uploaded Cloudinary files
+    # Load user's uploaded Cloudinary files
     username = session.get('username')
     uploaded_files = load_user_files().get(username, [])
 
@@ -537,7 +537,7 @@ def upload_file_to_selected():
         try:
             result = cloudinary.uploader.upload(file)
             file_url = result['secure_url']
-            return f"✅ File uploaded successfully: <a href='{file_url}' target='_blank'>View file</a>"
+            return f"File uploaded successfully: <a href='{file_url}' target='_blank'>View file</a>"
         except Exception as e:
             return f"Upload error: {str(e)}", 500
 
@@ -622,13 +622,26 @@ def move_file(subdir, filename):
 # Get all folders recursively for the dropdown
 def get_all_folders(base_path="", rel_base=""):
     folders = []
-    full_path = safe_path(base_path)
-    for entry in os.scandir(full_path):
-        if entry.is_dir():
-            rel_path = os.path.join(rel_base, entry.name).replace("\\", "/")
-            folders.append(rel_path)
-            folders.extend(get_all_folders(os.path.join(base_path, entry.name), rel_path))
+
+    # Get the user's root path only once (in browse route)
+    if rel_base == "":
+        root = safe_path()
+    else:
+        root = os.path.join(safe_path(), base_path)
+
+    full_path = os.path.abspath(root)
+    try:
+        for entry in os.scandir(full_path):
+            if entry.is_dir():
+                rel_path = os.path.join(rel_base, entry.name).replace("\\", "/")
+                folders.append(rel_path)
+                # Recurse into subfolders
+                folders.extend(get_all_folders(os.path.join(base_path, entry.name), rel_path))
+    except Exception as e:
+        print(f"[ERROR] Scanning folder failed: {e}")
+
     return folders
+
 
 @app.before_request
 def setup_user_folders():
